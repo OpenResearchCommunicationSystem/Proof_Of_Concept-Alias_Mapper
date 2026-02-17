@@ -1,0 +1,893 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Alias Adder Tool - Offline CSV Enhancer</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            font-weight: 300;
+        }
+
+        .header p {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+
+        .content {
+            padding: 40px;
+        }
+
+        .step {
+            margin-bottom: 40px;
+            padding: 30px;
+            border: 2px solid #e0e6ed;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+        }
+
+        .step.active {
+            border-color: #4facfe;
+            background: #f8fbff;
+        }
+
+        .step.completed {
+            border-color: #00c851;
+            background: #f8fff9;
+        }
+
+        .step-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .step-number {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: #e0e6ed;
+            color: #666;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            margin-right: 15px;
+            transition: all 0.3s ease;
+        }
+
+        .step.active .step-number {
+            background: #4facfe;
+            color: white;
+        }
+
+        .step.completed .step-number {
+            background: #00c851;
+            color: white;
+        }
+
+        .step-title {
+            font-size: 1.4em;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .file-upload {
+            position: relative;
+            display: inline-block;
+            cursor: pointer;
+            width: 100%;
+        }
+
+        .file-upload input[type=file] {
+            position: absolute;
+            left: -9999px;
+        }
+
+        .file-upload-btn {
+            display: block;
+            padding: 15px 25px;
+            background: #4facfe;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 1em;
+            transition: all 0.3s ease;
+            text-align: center;
+            text-decoration: none;
+        }
+
+        .file-upload-btn:hover {
+            background: #3d8bfe;
+            transform: translateY(-2px);
+        }
+
+        .file-info {
+            margin-top: 15px;
+            padding: 10px;
+            background: #f1f3f4;
+            border-radius: 4px;
+            font-size: 0.9em;
+            color: #666;
+        }
+
+        .column-selection {
+            display: none;
+            margin-top: 20px;
+        }
+
+        .column-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 10px;
+            margin: 20px 0;
+        }
+
+        .column-item {
+            display: flex;
+            align-items: center;
+            padding: 10px;
+            background: #f8f9fa;
+            border-radius: 4px;
+            border: 1px solid #dee2e6;
+            transition: all 0.2s ease;
+        }
+
+        .column-item:hover {
+            background: #e9ecef;
+        }
+
+        .column-item input[type="checkbox"] {
+            margin-right: 10px;
+            transform: scale(1.2);
+        }
+
+        .column-item label {
+            cursor: pointer;
+            flex: 1;
+            font-weight: 500;
+        }
+
+        .suffix-input {
+            margin: 20px 0;
+        }
+
+        .suffix-input label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .suffix-input input {
+            width: 200px;
+            padding: 10px;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            font-size: 1em;
+        }
+
+        .btn {
+            padding: 12px 25px;
+            background: #28a745;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 1em;
+            transition: all 0.3s ease;
+            margin-right: 10px;
+        }
+
+        .btn:hover {
+            background: #218838;
+            transform: translateY(-2px);
+        }
+
+        .btn:disabled {
+            background: #6c757d;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .btn-secondary {
+            background: #6c757d;
+        }
+
+        .btn-secondary:hover {
+            background: #545b62;
+        }
+
+        .progress {
+            display: none;
+            margin: 20px 0;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 20px;
+            background: #e9ecef;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #4facfe, #00f2fe);
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+
+        .progress-text {
+            text-align: center;
+            margin-top: 10px;
+            font-weight: 600;
+            color: #666;
+        }
+
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+            padding: 15px;
+            border-radius: 4px;
+            margin: 15px 0;
+            border: 1px solid #f5c6cb;
+        }
+
+        .success {
+            background: #d4edda;
+            color: #155724;
+            padding: 15px;
+            border-radius: 4px;
+            margin: 15px 0;
+            border: 1px solid #c3e6cb;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+        }
+
+        .modal-content {
+            background-color: white;
+            margin: 15% auto;
+            padding: 30px;
+            border-radius: 8px;
+            width: 80%;
+            max-width: 500px;
+            text-align: center;
+        }
+
+        .modal h3 {
+            margin-bottom: 20px;
+            color: #333;
+        }
+
+        .modal-buttons {
+            margin-top: 20px;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                margin: 10px;
+            }
+            
+            .content {
+                padding: 20px;
+            }
+            
+            .header {
+                padding: 20px;
+            }
+            
+            .header h1 {
+                font-size: 2em;
+            }
+            
+            .column-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🎯 Alias Adder Tool</h1>
+            <p>Offline CSV Enhancer - Add alias columns to your datasets</p>
+        </div>
+        
+        <div class="content">
+            <!-- Step 1: Upload Alias Map -->
+            <div class="step active" id="step1">
+                <div class="step-header">
+                    <div class="step-number">1</div>
+                    <div class="step-title">Upload Alias Map CSV</div>
+                </div>
+                <p style="margin-bottom: 20px; color: #666;">
+                    Upload a CSV file with two columns: <strong>label</strong> (values to match) and <strong>alias</strong> (replacement values)
+                </p>
+                <div class="file-upload">
+                    <input type="file" id="aliasMapFile" accept=".csv" />
+                    <label for="aliasMapFile" class="file-upload-btn">
+                        📄 Choose Alias Map CSV
+                    </label>
+                </div>
+                <div class="file-info" id="aliasMapInfo" style="display: none;"></div>
+            </div>
+
+            <!-- Step 2: Upload Target CSV -->
+            <div class="step" id="step2">
+                <div class="step-header">
+                    <div class="step-number">2</div>
+                    <div class="step-title">Upload Target CSV</div>
+                </div>
+                <p style="margin-bottom: 20px; color: #666;">
+                    Upload the CSV file you want to enhance with alias columns
+                </p>
+                <div class="file-upload">
+                    <input type="file" id="targetFile" accept=".csv" disabled />
+                    <label for="targetFile" class="file-upload-btn">
+                        📊 Choose Target CSV
+                    </label>
+                </div>
+                <div class="file-info" id="targetFileInfo" style="display: none;"></div>
+            </div>
+
+            <!-- Step 3: Configure Columns -->
+            <div class="step" id="step3">
+                <div class="step-header">
+                    <div class="step-number">3</div>
+                    <div class="step-title">Configure Alias Columns</div>
+                </div>
+                
+                <div class="column-selection" id="columnSelection">
+                    <p style="margin-bottom: 15px; color: #666;">
+                        Select which columns should be scanned for aliases:
+                    </p>
+                    <div class="column-grid" id="columnGrid"></div>
+                    
+                    <div class="suffix-input">
+                        <label for="aliasSuffix">Alias Column Suffix:</label>
+                        <input type="text" id="aliasSuffix" value="_Alias" placeholder="_Alias" />
+                    </div>
+                    
+                    <button class="btn" id="processBtn" disabled onclick="processFiles()">
+                        🔄 Process Files
+                    </button>
+                </div>
+            </div>
+
+            <!-- Step 4: Download Result -->
+            <div class="step" id="step4">
+                <div class="step-header">
+                    <div class="step-number">4</div>
+                    <div class="step-title">Download Enhanced CSV</div>
+                </div>
+                
+                <div class="progress" id="progressContainer">
+                    <div class="progress-bar">
+                        <div class="progress-fill" id="progressFill"></div>
+                    </div>
+                    <div class="progress-text" id="progressText">Processing...</div>
+                </div>
+                
+                <div id="resultContainer" style="display: none;">
+                    <div class="success" id="resultMessage"></div>
+                    <button class="btn" id="downloadBtn" onclick="downloadResult()">
+                        💾 Download Enhanced CSV
+                    </button>
+                    <button class="btn btn-secondary" onclick="resetTool()">
+                        🔄 Start Over
+                    </button>
+                </div>
+            </div>
+
+            <div id="errorContainer"></div>
+        </div>
+    </div>
+
+    <!-- Overwrite Confirmation Modal -->
+    <div id="overwriteModal" class="modal">
+        <div class="modal-content">
+            <h3>⚠️ Column Already Exists</h3>
+            <p id="overwriteMessage"></p>
+            <div class="modal-buttons">
+                <button class="btn" onclick="confirmOverwrite(true)">Yes, Overwrite</button>
+                <button class="btn btn-secondary" onclick="confirmOverwrite(false)">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Global variables
+        let aliasMap = {};
+        let targetData = [];
+        let targetHeaders = [];
+        let targetFileName = '';
+        let processedData = [];
+        let overwriteCallback = null;
+
+        // Initialize event listeners
+        document.getElementById('aliasMapFile').addEventListener('change', handleAliasMapUpload);
+        document.getElementById('targetFile').addEventListener('change', handleTargetFileUpload);
+
+        function showError(message) {
+            const errorContainer = document.getElementById('errorContainer');
+            errorContainer.innerHTML = `<div class="error">${message}</div>`;
+            setTimeout(() => {
+                errorContainer.innerHTML = '';
+            }, 5000);
+        }
+
+        function showSuccess(message) {
+            const errorContainer = document.getElementById('errorContainer');
+            errorContainer.innerHTML = `<div class="success">${message}</div>`;
+            setTimeout(() => {
+                errorContainer.innerHTML = '';
+            }, 3000);
+        }
+
+        function parseCSV(csvText) {
+            const lines = csvText.split('\n');
+            const result = [];
+            let headers = [];
+
+            if (lines.length === 0) {
+                throw new Error('CSV file is empty');
+            }
+
+            // Parse headers
+            headers = parseCSVLine(lines[0]);
+            
+            // Parse data rows
+            for (let i = 1; i < lines.length; i++) {
+                const line = lines[i].trim();
+                if (line) {
+                    const row = parseCSVLine(line);
+                    if (row.length === headers.length) {
+                        const rowObj = {};
+                        headers.forEach((header, index) => {
+                            rowObj[header] = row[index] || '';
+                        });
+                        result.push(rowObj);
+                    }
+                }
+            }
+
+            return { headers, data: result };
+        }
+
+        function parseCSVLine(line) {
+            const result = [];
+            let current = '';
+            let inQuotes = false;
+            
+            for (let i = 0; i < line.length; i++) {
+                const char = line[i];
+                const nextChar = line[i + 1];
+                
+                if (char === '"') {
+                    if (inQuotes && nextChar === '"') {
+                        current += '"';
+                        i++; // Skip next quote
+                    } else {
+                        inQuotes = !inQuotes;
+                    }
+                } else if (char === ',' && !inQuotes) {
+                    result.push(current.trim());
+                    current = '';
+                } else {
+                    current += char;
+                }
+            }
+            
+            result.push(current.trim());
+            return result;
+        }
+
+        function csvEscape(value) {
+            if (value == null) return '';
+            const str = String(value);
+            if (str.includes(',') || str.includes('"') || str.includes('\n')) {
+                return '"' + str.replace(/"/g, '""') + '"';
+            }
+            return str;
+        }
+
+        function handleAliasMapUpload(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const csvData = parseCSV(e.target.result);
+                    
+                    // Validate required columns
+                    const requiredColumns = ['label', 'alias'];
+                    const missingColumns = requiredColumns.filter(col => 
+                        !csvData.headers.some(header => header.toLowerCase() === col)
+                    );
+                    
+                    if (missingColumns.length > 0) {
+                        throw new Error(`Missing required columns: ${missingColumns.join(', ')}. Expected columns: label, alias`);
+                    }
+
+                    // Build alias map (case-insensitive)
+                    aliasMap = {};
+                    let labelCol = csvData.headers.find(h => h.toLowerCase() === 'label');
+                    let aliasCol = csvData.headers.find(h => h.toLowerCase() === 'alias');
+                    
+                    csvData.data.forEach(row => {
+                        const label = row[labelCol];
+                        const alias = row[aliasCol];
+                        if (label && alias) {
+                            aliasMap[label.toLowerCase()] = alias;
+                        }
+                    });
+
+                    // Update UI
+                    document.getElementById('aliasMapInfo').innerHTML = 
+                        `✅ Loaded ${Object.keys(aliasMap).length} alias mappings from "${file.name}"`;
+                    document.getElementById('aliasMapInfo').style.display = 'block';
+                    
+                    // Mark step 1 as completed and activate step 2
+                    document.getElementById('step1').classList.add('completed');
+                    document.getElementById('step1').classList.remove('active');
+                    document.getElementById('step2').classList.add('active');
+                    document.getElementById('targetFile').disabled = false;
+                    
+                    showSuccess('Alias map loaded successfully!');
+                } catch (error) {
+                    showError(`Error parsing alias map: ${error.message}`);
+                }
+            };
+            reader.readAsText(file);
+        }
+
+        function handleTargetFileUpload(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            targetFileName = file.name.replace('.csv', '');
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const csvData = parseCSV(e.target.result);
+                    targetHeaders = csvData.headers;
+                    targetData = csvData.data;
+
+                    // Update UI
+                    document.getElementById('targetFileInfo').innerHTML = 
+                        `✅ Loaded ${targetData.length} rows with ${targetHeaders.length} columns from "${file.name}"`;
+                    document.getElementById('targetFileInfo').style.display = 'block';
+                    
+                    // Show column selection
+                    displayColumnSelection();
+                    
+                    // Mark step 2 as completed and activate step 3
+                    document.getElementById('step2').classList.add('completed');
+                    document.getElementById('step2').classList.remove('active');
+                    document.getElementById('step3').classList.add('active');
+                    
+                    showSuccess('Target CSV loaded successfully!');
+                } catch (error) {
+                    showError(`Error parsing target CSV: ${error.message}`);
+                }
+            };
+            reader.readAsText(file);
+        }
+
+        function displayColumnSelection() {
+            const columnGrid = document.getElementById('columnGrid');
+            columnGrid.innerHTML = '';
+            
+            targetHeaders.forEach(header => {
+                const div = document.createElement('div');
+                div.className = 'column-item';
+                div.innerHTML = `
+                    <input type="checkbox" id="col_${header}" value="${header}" onchange="updateProcessButton()">
+                    <label for="col_${header}">${header}</label>
+                `;
+                columnGrid.appendChild(div);
+            });
+            
+            document.getElementById('columnSelection').style.display = 'block';
+        }
+
+        function updateProcessButton() {
+            const checkboxes = document.querySelectorAll('#columnGrid input[type="checkbox"]');
+            const anyChecked = Array.from(checkboxes).some(cb => cb.checked);
+            document.getElementById('processBtn').disabled = !anyChecked;
+        }
+
+        function getSelectedColumns() {
+            const checkboxes = document.querySelectorAll('#columnGrid input[type="checkbox"]:checked');
+            return Array.from(checkboxes).map(cb => cb.value);
+        }
+
+        function checkExistingColumns(selectedColumns, suffix) {
+            const existingAliasColumns = [];
+            selectedColumns.forEach(col => {
+                const aliasColumnName = col + suffix;
+                if (targetHeaders.includes(aliasColumnName)) {
+                    existingAliasColumns.push(aliasColumnName);
+                }
+            });
+            return existingAliasColumns;
+        }
+
+        function showOverwriteModal(existingColumns, callback) {
+            const modal = document.getElementById('overwriteModal');
+            const message = document.getElementById('overwriteMessage');
+            
+            message.textContent = `The following alias columns already exist: ${existingColumns.join(', ')}. Do you want to overwrite them?`;
+            modal.style.display = 'block';
+            overwriteCallback = callback;
+        }
+
+        function confirmOverwrite(overwrite) {
+            document.getElementById('overwriteModal').style.display = 'none';
+            if (overwriteCallback) {
+                overwriteCallback(overwrite);
+                overwriteCallback = null;
+            }
+        }
+
+        function processFiles() {
+            const selectedColumns = getSelectedColumns();
+            const suffix = document.getElementById('aliasSuffix').value || '_Alias';
+            
+            if (selectedColumns.length === 0) {
+                showError('Please select at least one column to process');
+                return;
+            }
+
+            // Check for existing alias columns
+            const existingColumns = checkExistingColumns(selectedColumns, suffix);
+            
+            if (existingColumns.length > 0) {
+                showOverwriteModal(existingColumns, (overwrite) => {
+                    if (overwrite) {
+                        performProcessing(selectedColumns, suffix);
+                    }
+                });
+            } else {
+                performProcessing(selectedColumns, suffix);
+            }
+        }
+
+        function performProcessing(selectedColumns, suffix) {
+            // Mark step 3 as completed and activate step 4
+            document.getElementById('step3').classList.add('completed');
+            document.getElementById('step3').classList.remove('active');
+            document.getElementById('step4').classList.add('active');
+            
+            // Show progress
+            document.getElementById('progressContainer').style.display = 'block';
+            
+            // Process data with progress updates
+            setTimeout(() => processDataWithProgress(selectedColumns, suffix), 100);
+        }
+
+        function processDataWithProgress(selectedColumns, suffix) {
+            const progressFill = document.getElementById('progressFill');
+            const progressText = document.getElementById('progressText');
+            
+            // Create new headers
+            const newHeaders = [...targetHeaders];
+            const aliasColumnPositions = {};
+            
+            selectedColumns.forEach(col => {
+                const aliasColumnName = col + suffix;
+                const originalIndex = targetHeaders.indexOf(col);
+                
+                // Remove existing alias column if it exists
+                const existingAliasIndex = newHeaders.indexOf(aliasColumnName);
+                if (existingAliasIndex !== -1) {
+                    newHeaders.splice(existingAliasIndex, 1);
+                }
+                
+                // Insert alias column right after the original column
+                const insertIndex = newHeaders.indexOf(col) + 1;
+                newHeaders.splice(insertIndex, 0, aliasColumnName);
+                aliasColumnPositions[col] = aliasColumnName;
+            });
+
+            // Process data in chunks for better performance
+            processedData = [];
+            const chunkSize = 100;
+            let currentIndex = 0;
+            
+            function processChunk() {
+                const endIndex = Math.min(currentIndex + chunkSize, targetData.length);
+                
+                for (let i = currentIndex; i < endIndex; i++) {
+                    const row = targetData[i];
+                    const newRow = {};
+                    
+                    // Copy all original data
+                    newHeaders.forEach(header => {
+                        if (targetHeaders.includes(header)) {
+                            newRow[header] = row[header] || '';
+                        } else {
+                            newRow[header] = ''; // Initialize alias columns
+                        }
+                    });
+                    
+                    // Fill alias columns
+                    selectedColumns.forEach(col => {
+                        const aliasColumnName = aliasColumnPositions[col];
+                        const cellValue = row[col];
+                        
+                        if (cellValue) {
+                            const alias = aliasMap[cellValue.toLowerCase()];
+                            if (alias) {
+                                newRow[aliasColumnName] = alias;
+                            }
+                        }
+                    });
+                    
+                    processedData.push(newRow);
+                }
+                
+                // Update progress
+                const progress = (endIndex / targetData.length) * 100;
+                progressFill.style.width = progress + '%';
+                progressText.textContent = `Processing row ${endIndex} of ${targetData.length}...`;
+                
+                currentIndex = endIndex;
+                
+                if (currentIndex < targetData.length) {
+                    setTimeout(processChunk, 10); // Continue processing
+                } else {
+                    // Processing complete
+                    finishProcessing(newHeaders, selectedColumns, suffix);
+                }
+            }
+            
+            processChunk();
+        }
+
+        function finishProcessing(newHeaders, selectedColumns, suffix) {
+            // Hide progress and show result
+            document.getElementById('progressContainer').style.display = 'none';
+            
+            // Count matches
+            let totalMatches = 0;
+            selectedColumns.forEach(col => {
+                const aliasColumnName = col + suffix;
+                processedData.forEach(row => {
+                    if (row[aliasColumnName]) {
+                        totalMatches++;
+                    }
+                });
+            });
+            
+            const resultMessage = `✅ Processing complete! Found ${totalMatches} matches across ${selectedColumns.length} column(s). Enhanced CSV is ready for download.`;
+            document.getElementById('resultMessage').textContent = resultMessage;
+            document.getElementById('resultContainer').style.display = 'block';
+            
+            // Store headers for download
+            processedData.headers = newHeaders;
+            
+            showSuccess('Files processed successfully!');
+        }
+
+        function downloadResult() {
+            if (processedData.length === 0) {
+                showError('No processed data to download');
+                return;
+            }
+            
+            // Generate CSV content
+            const headers = processedData.headers;
+            let csvContent = headers.map(csvEscape).join(',') + '\n';
+            
+            processedData.forEach(row => {
+                const rowData = headers.map(header => csvEscape(row[header] || ''));
+                csvContent += rowData.join(',') + '\n';
+            });
+            
+            // Create and trigger download
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            
+            if (link.download !== undefined) {
+                const url = URL.createObjectURL(blob);
+                link.setAttribute('href', url);
+                link.setAttribute('download', `with-alias-${targetFileName}.csv`);
+                link.style.visibility = 'hidden';
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                URL.revokeObjectURL(url);
+                
+                showSuccess('CSV file downloaded successfully!');
+            } else {
+                showError('Download not supported in this browser');
+            }
+        }
+
+        function resetTool() {
+            // Reset all variables
+            aliasMap = {};
+            targetData = [];
+            targetHeaders = [];
+            targetFileName = '';
+            processedData = [];
+            
+            // Reset file inputs
+            document.getElementById('aliasMapFile').value = '';
+            document.getElementById('targetFile').value = '';
+            document.getElementById('targetFile').disabled = true;
+            
+            // Reset UI elements
+            document.getElementById('aliasMapInfo').style.display = 'none';
+            document.getElementById('targetFileInfo').style.display = 'none';
+            document.getElementById('columnSelection').style.display = 'none';
+            document.getElementById('progressContainer').style.display = 'none';
+            document.getElementById('resultContainer').style.display = 'none';
+            document.getElementById('errorContainer').innerHTML = '';
+            
+            // Reset steps
+            document.querySelectorAll('.step').forEach(step => {
+                step.classList.remove('active', 'completed');
+            });
+            document.getElementById('step1').classList.add('active');
+            
+            // Reset form values
+            document.getElementById('aliasSuffix').value = '_Alias';
+            document.getElementById('processBtn').disabled = true;
+        }
+
+        // Close modal when clicking outside
+        window.onclick = function(event) {
+            const modal = document.getElementById('overwriteModal');
+            if (event.target === modal) {
+                modal.style.display = 'none';
+                overwriteCallback = null;
+            }
+        }
+    </script>
+</body>
+</html>
